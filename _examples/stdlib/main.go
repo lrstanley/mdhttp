@@ -8,11 +8,11 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello Gopher!\n")
+	fmt.Fprintln(w, "Hello Gopher!")
 }
 
 func main() {
-	http.Handle("/docs/", mdhttp.New("/docs/", http.Dir("../docs/"), nil))
 	http.HandleFunc("/", handler)
+	http.Handle("/docs/", mdhttp.New("/docs/", http.Dir("../docs/"), nil))
 	http.ListenAndServe(":8080", nil)
 }

@@ -27,7 +27,6 @@ import (
 func New(prefix string, fs http.FileSystem, renderer Renderer) http.Handler {
 	md := &Markdown{prefix: prefix, fs: fs, renderer: renderer}
 	md.handler = http.StripPrefix(prefix, http.FileServer(fs))
-
 	return md
 }
 
