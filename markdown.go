@@ -186,7 +186,7 @@ func (mdf *MarkdownFile) HTMLTemplate() template.HTML {
 }
 
 // DefaultRenderer satisfies the Renderer type, and can be used with
-// NewMarkdown().
+// New() and NewMiddleware().
 func DefaultRenderer(w http.ResponseWriter, r *http.Request, mdf *MarkdownFile) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
