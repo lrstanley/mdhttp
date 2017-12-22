@@ -10,7 +10,7 @@ const htmlTemplate = `<!DOCTYPE html>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta charset="UTF-8">
-	<title>%s</title>
+	<title>{{.Title}}</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.9.0/github-markdown.min.css" integrity="sha256-AcEoN20lbehGx2iA6fVk4geoblRBOAUmz+gEM9QE59Y=" crossorigin="anonymous" />
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" integrity="sha256-Zd1icfZ72UBmsId/mUcagrmN7IN5Qkrvh75ICHIQVTk=" crossorigin="anonymous" />
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
@@ -54,7 +54,7 @@ const htmlTemplate = `<!DOCTYPE html>
 </head>
 
 <body>
-	<div class="main markdown-body">%s</div>
+	<div class="main markdown-body">{{.HTMLTemplate}}</div>
 
 	<script type="text/javascript">
 	$(function () {
