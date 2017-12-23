@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"gopkg.in/russross/blackfriday.v2"
 )
 
 // New returns a new markdown renderer. Prefix is url path to strip from the
@@ -175,7 +175,17 @@ func (mdf *MarkdownFile) GetAttr(name string) string {
 // sanitized ith UGC policies (bluemonday), and common markdown format
 // (blackfriday).
 func (mdf *MarkdownFile) HTML() []byte {
-	return bluemonday.UGCPolicy().SanitizeBytes(blackfriday.MarkdownCommon(mdf.Content))
+	return bluemonday.UGCPolicy().SanitizeBytes(
+		blackfriday.Run(
+			mdf.Content,
+			blackfriday.WithExtensions(blackfriday.CommonExtensions|blackfriday.Footnotes),
+			blackfriday.WithRenderer(
+				blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
+					Flags: blackfriday.CommonHTMLFlags | blackfriday.NoreferrerLinks | blackfriday.FootnoteReturnLinks,
+				}),
+			),
+		),
+	)
 }
 
 // HTMLTemplate is the same as the HTML method, however it wraps the returned
