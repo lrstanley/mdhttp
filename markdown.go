@@ -90,12 +90,22 @@ func (md *Markdown) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer f.Close()
 
+checkdir:
+
 	if mdf.FileInfo, err = f.Stat(); err != nil {
 		http.Error(w, fmt.Sprintf("error stating %q: %s", mdf.Path, err), http.StatusInternalServerError)
 		return
 	}
 
 	if mdf.FileInfo.IsDir() {
+		// Check to see if there is an "index.md" file in the directory, and
+		// load it if so.
+		ipath := strings.TrimSuffix(mdf.Path, "/") + "/index.md"
+		if f, err = md.fs.Open(ipath); err == nil {
+			mdf.Path = ipath
+			goto checkdir
+		}
+
 		md.handler.ServeHTTP(w, r)
 		return
 	}
