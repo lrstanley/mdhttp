@@ -4,6 +4,8 @@ mdhttp is a small package that lets you seemlessly render markdown files via
 a Go http middleware. It will (by default) use Github-style theming, and
 highlightjs for syntax highlighting.
 
+![](https://i.imgur.com/6uquetU.png)
+
 ## License
 
     LICENSE: The MIT License (MIT)
