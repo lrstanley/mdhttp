@@ -6,6 +6,7 @@ package mdhttp
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -14,9 +15,11 @@ import (
 	"net/textproto"
 	"os"
 	"strings"
+	"sync/atomic"
 
+	"github.com/Depado/bfchroma"
 	"github.com/microcosm-cc/bluemonday"
-	"gopkg.in/russross/blackfriday.v2"
+	bf "gopkg.in/russross/blackfriday.v2"
 )
 
 // New returns a new markdown renderer. Prefix is url path to strip from the
@@ -163,6 +166,9 @@ type MarkdownFile struct {
 	FileInfo os.FileInfo
 	Content  []byte
 	attr     textproto.MIMEHeader
+
+	tocCache  atomic.Value
+	bodyCache atomic.Value
 }
 
 // GetAttr gets one of the attributes (metadata) which was defined at the top
@@ -181,27 +187,71 @@ func (mdf *MarkdownFile) GetAttr(name string) string {
 	return mdf.attr.Get(name)
 }
 
+var tocSplitAt = []byte("</nav>")
+var tocReplacer = strings.NewReplacer(
+	"<nav>", "",
+	"<ul>", `<ul class="nav flex-column">`,
+	"<li>", `<li class="nav-item">`,
+	"<a ", `<a class="nav-link" `,
+)
+
 // HTML returns the rendered HTML version of the markdown file, by default
 // sanitized ith UGC policies (bluemonday), and common markdown format
 // (blackfriday).
-func (mdf *MarkdownFile) HTML() []byte {
-	return bluemonday.UGCPolicy().SanitizeBytes(
-		blackfriday.Run(
-			mdf.Content,
-			blackfriday.WithExtensions(blackfriday.CommonExtensions|blackfriday.Footnotes),
-			blackfriday.WithRenderer(
-				blackfriday.NewHTMLRenderer(blackfriday.HTMLRendererParameters{
-					Flags: blackfriday.CommonHTMLFlags | blackfriday.NoreferrerLinks | blackfriday.FootnoteReturnLinks,
-				}),
-			),
-		),
+func (mdf *MarkdownFile) HTML() (toc, body string) {
+	if tocCache := mdf.tocCache.Load(); tocCache != nil {
+		toc = tocCache.(string)
+	}
+	if bodyCache := mdf.bodyCache.Load(); bodyCache != nil {
+		body = bodyCache.(string)
+	}
+
+	if toc != "" || body != "" {
+		return toc, body
+	}
+
+	raw := bf.Run(
+		mdf.Content,
+		bf.WithRenderer(bfchroma.NewRenderer(
+			bfchroma.Style("github"),
+			bfchroma.Extend(bf.NewHTMLRenderer(bf.HTMLRendererParameters{
+				Flags: bf.CommonHTMLFlags | bf.TOC,
+			})),
+		)),
 	)
+
+	// Allow chroma attributes through.
+	policy := bluemonday.UGCPolicy()
+	policy = policy.AllowElements("span")
+	policy = policy.AllowAttrs("style").OnElements("span")
+
+	if i := bytes.Index(raw, tocSplitAt); i > -1 {
+		toc = tocReplacer.Replace(string(raw[:i]))
+		body = string(policy.SanitizeBytes(raw[i+len(tocSplitAt)+1:]))
+
+		mdf.tocCache.Store(toc)
+		mdf.bodyCache.Store(body)
+
+		return toc, body
+	}
+
+	body = string(policy.SanitizeBytes(raw))
+	mdf.bodyCache.Store(body)
+	return "", body
 }
 
-// HTMLTemplate is the same as the HTML method, however it wraps the returned
-// bytes in template.HTML(), for use with injecting in an html/template template.
-func (mdf *MarkdownFile) HTMLTemplate() template.HTML {
-	return template.HTML(mdf.HTML())
+// Body returns a template.HTML wrapped HTML representation of the Markdown
+// body.
+func (mdf *MarkdownFile) Body() template.HTML {
+	_, body := mdf.HTML()
+	return template.HTML(body)
+}
+
+// TOC returns a template.HTML wrapped HTML representation of the Markdown
+// table of contents.
+func (mdf *MarkdownFile) TOC() template.HTML {
+	toc, _ := mdf.HTML()
+	return template.HTML(toc)
 }
 
 // DefaultRenderer satisfies the Renderer type, and can be used with
