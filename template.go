@@ -79,9 +79,9 @@ const htmlTemplate = `<!DOCTYPE html>
 		}
 
 		.html-gen-toc > ul { position: relative; }
-		.html-gen-toc li { padding: 0 0 0.3rem 0.3em; }
-		.html-gen-toc li:last-child { padding: 0 0 0rem 0.3em; }
-		.html-gen-toc > ul:last-child { padding: 0 0 0.6rem 0.3em; }
+		.html-gen-toc li { padding: 0 0 0.3rem 0.4rem; }
+		.html-gen-toc li:last-child { padding: 0 0 0rem 0.4rem; }
+		.html-gen-toc > ul:last-child { padding: 0 0 0.6rem 0; }
 
 		.html-gen-toc li > a {
 			display: block;
@@ -101,8 +101,8 @@ const htmlTemplate = `<!DOCTYPE html>
 		.html-gen-toc li > a.active {
 			color: #000000;
 			border-left: 5px solid rgb(0, 93, 214);
-			padding: 0 0 0 25px;
-			margin-left: -30px;
+			padding: 0 0 0 20px;
+			margin-left: -25px;
 		}
 
 		.html-gen-toc li > a:hover {
